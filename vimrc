@@ -55,20 +55,25 @@ set tabstop=4
 set softtabstop=4
 "Settings for C++ files are set by below autocmd
 
-augroup mine
+augroup system_vimrc
+
     autocmd!
+
     "Set tab to 4 if Tcl or vim file is opened
     autocmd FileType tcl,vim set shiftwidth=4 tabstop=4 softtabstop=4
+
     "Switch back to 8 for cpp files
     autocmd FileType c,cpp set shiftwidth=8 tabstop=8 softtabstop=8
-    "Set cdesigner.log file type
-    autocmd BufNewFile,BufRead *.log set filetype=cdesigner
+
+    " Automatically remove trailing spaces and dos-style endlines
+    autocmd BufWritePre,FileWritePre * silent! set ff=unix | silent! %s/\s\+$//
 
     " When editing a file, always jump to the last cursor position
     autocmd BufReadPost *
     \ if line("'\"") > 0 && line ("'\"") <= line("$") |
     \   exe "normal! g'\"" |
     \ endif
+
 augroup END
 
 "}}}
@@ -165,10 +170,11 @@ function! s:SelfMemoryUsage()
     let s:vim_pid = getpid()
     let s:vim_mem = system("ps -p " . s:vim_pid . " -o rss=")
     let s:ycm_mem = 0
-    if exists("g:loaded_youcompleteme")
+    try
         let s:ycm_pid = youcompleteme#ServerPid()
         let s:ycm_mem = system("ps -p " . s:ycm_pid . " -o rss=")
-    endif
+    catch
+    endtry
     return s:vim_mem + s:ycm_mem
 endfunction
 
@@ -179,10 +185,10 @@ let s:total_vim_memory = s:TotalMemoryUsage()
 if s:total_vim_memory > 4000000
     echohl ErrorMsg
     echo "Your Vims are using " . s:total_vim_memory[0:-2] . "Kb of RAM in summary, which is far beyond acceptable limits."
-    echo "Turning Off all Shiny features."
+    echo "Turning Off YouCompleteMe plugin."
     echo "Use :ReportMemory and :ReportTotalMemory commands to find out guilty Vim."
     echohl Normal
-    finish
+    let g:loaded_youcompleteme = 1
 endif
 
 "}}}
@@ -271,7 +277,7 @@ map <F6> :NERDTreeToggle<CR>
 augroup myPlugins
     autocmd!
     "Automatically close NERDTree when file is closed
-    autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTreeType") && b:NERDTreeType == "primary") | q | endif
+    autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
 augroup END
 "}}}
 

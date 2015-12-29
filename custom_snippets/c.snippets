@@ -1,0 +1,44 @@
+
+snippet if "if {} .. (if)" !b
+if (${1:/* condition */}) {
+	${VISUAL}${0}
+}
+endsnippet
+
+post_jump "if snip.tabstop == 0 and not snip.tabstops[1].current_text: snip.buffer[snip.tabstops[1].start.line] = 'namespace {'"
+snippet ns "namespace {} .. (namespace)" !b
+namespace ${1} {
+
+${VISUAL}${0}
+
+} `!p snip.rv = "// unnamed namespace" if not t[1] else "// namespace " + t[1]`
+endsnippet
+
+snippet inc "#include local header (inc)" !b
+#include "${1:`!p snip.rv = snip.basename + '.hpp'`}"
+endsnippet
+
+snippet Inc "#include <> (Inc)" !b
+#include <${1:.hpp}>
+endsnippet
+
+global !p
+def guard_str(fp):
+    pos = path.rfind('src/')
+    if pos != -1:
+        str = 'CUSTOM_TOOL_' + fp[pos + 4 :]
+    else:
+        str = os.path.basename(fp)
+    str = str.replace('/', '_')
+    str = str.replace('.', '_')
+    return str.upper()
+endglobal
+
+snippet ifndef "#ifndef ... #define ... #endif" !b
+#ifndef $1
+#define ${1:`!p snip.rv = guard_str(path)`}
+
+${VISUAL}${0}
+
+#endif // $1
+endsnippet
