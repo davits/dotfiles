@@ -12,9 +12,6 @@ elseif &term=="xterm"
 endif
 "}}}
 
-if v:lang =~ "utf8$" || v:lang =~ "UTF-8$"
-    set fileencodings=utf-8,latin1
-endif
 
 " Switch syntax highlighting on, when the terminal has colors
 if &t_Co > 2 || has("gui_running")
@@ -23,11 +20,11 @@ if &t_Co > 2 || has("gui_running")
 endif
 
 set nocompatible         " Use Vim defaults (much better!)
+set fileencodings=utf-8  " switch everything to UTF-8
 set bs=indent,eol,start  " allow backspacing over everything in insert mode
 set viminfo='20,\"50     " read/write a .viminfo file, don't store more than 50 lines of registers
 set history=50           " keep 50 lines of command line history
 set mouse=a              " enable mouse
-set makeprg=synmake      " use Synopsys synmake as default make
 set ruler                " show the cursor position all the time
 set incsearch            " enable search as you type
 set noerrorbells         " don't beep on errors (seems to be not enought)
@@ -36,7 +33,7 @@ set t_vb=                " switch off that blink-screen too :)
 set completeopt-=preview " Turn off preview window on completions
 
 " Change default grep command to ignore errors
-set grepprg=grep\ -ns\ $*
+set grepprg=ag\ --nogroup\ --nocolor
 
 "Since Tab and trailing spaces are prohibited by our coding style
 "force vim to display them to make more notable to users
@@ -113,7 +110,7 @@ endwhile
 
 let s:exts = {'h': ['c', 'cc', 'cpp', 'cxx'], 'c': ['h', 'hpp', 'hxx'], 'hpp': ['cpp', 'cxx', 'cc', 'c'], 'cpp': ['hpp', 'hxx', 'h'], 'hxx': ['cxx', 'cpp', 'cc', 'c'], 'cxx': ['hxx', 'hpp', 'h'], 'cc': ['hpp', 'hxx', 'h']}
 
-function s:FindCorrespondingFile()
+function s:GoToCorrespondingFile()
     let cfe = expand("%:e")
     if !has_key(s:exts, cfe)
         echohl ErrorMsg
@@ -147,23 +144,25 @@ function s:FindCorrespondingFile()
     endtry
 endfunction
 
-nnoremap gc :call <SID>FindCorrespondingFile()<CR>
+nnoremap gc :call <SID>GoToCorrespondingFile()<CR>
 
 " }}}
 
 "{{{ Plugins and options
 
-"{{{ Memory Usage (this section might return)
+"{{{ Memory Usage (may turn off YouCompleteMe)
 
 function! s:PrintMemoryUsage(message, mem)
     let s:mb = a:mem / 1024.0
     let s:gb = s:mb / 1024.0
-    echo printf("%s: %s Kb, or %.1f Mb, or %.2f Gb", a:message, a:mem, s:mb, s:gb)
+    echo printf("%s: %.2fGb (%.1fMb or %sKb)", a:message, s:gb, s:mb, a:mem)
 endfunction
 
 function! s:TotalMemoryUsage()
-    let s:mem = system("ps -u $USER -o rss,comm | grep 'orig_vim\\\|python'| awk '{sum += $1} END {print sum}'")
-    return s:mem[0:-2]
+    let s:mem = system("ps -u $USER -o rss,comm | \\grep 'vim\\\|python'| awk '{sum += $1} END {print sum}'")
+    " Remove newlines at the end.
+    let s:mem = substitute(s:mem, '\n\+$', '', '')
+    return s:mem
 endfunction
 
 function! s:SelfMemoryUsage()
@@ -184,20 +183,13 @@ command! ReportTotalMemory call s:PrintMemoryUsage("Total memory usage by Vims",
 let s:total_vim_memory = s:TotalMemoryUsage()
 if s:total_vim_memory > 4000000
     echohl ErrorMsg
-    echo "Your Vims are using " . s:total_vim_memory[0:-2] . "Kb of RAM in summary, which is far beyond acceptable limits."
+    echo "Your Vims are already using " . s:total_vim_memory . "Kb of RAM in summary, which is far beyond acceptable limits."
     echo "Turning Off YouCompleteMe plugin."
     echo "Use :ReportMemory and :ReportTotalMemory commands to find out guilty Vim."
     echohl Normal
     let g:loaded_youcompleteme = 1
 endif
 
-"}}}
-
-"{{{ Insert $VIM/plugins directory into rtp,
-"    after $HOME/.vim entry, which is first one by default
-let s:rtp_list = split(&rtp, ',')
-call insert(s:rtp_list, $VIM . '/plugins', 1)
-execute 'set rtp=' . join(s:rtp_list, ',')
 "}}}
 
 "{{{ Vundle options
@@ -210,16 +202,18 @@ call vundle#begin($VIM . "/plugins/bundle")
 
 Plugin 'gmarik/Vundle.vim'
 
-Plugin 'Valloric/YouCompleteMe'
-Plugin 'bling/vim-airline'
+Plugin 'davits/YouCompleteMe'
+Plugin 'davits/DyeVim'
+Plugin 'davits/autohighlight'
+Plugin 'vim-airline/vim-airline'
+Plugin 'vim-airline/vim-airline-themes'
 Plugin 'SirVer/ultisnips'
 Plugin 'honza/vim-snippets'
-Plugin 'scrooloose/syntastic'
 Plugin 'scrooloose/nerdtree'
-Plugin 'vim-scripts/L9'
-Plugin 'vim-scripts/FuzzyFinder'
+Plugin 'ctrlpvim/ctrlp.vim'
 Plugin 'Raimondi/delimitMate'
 Plugin 'altercation/vim-colors-solarized'
+Plugin 'tpope/vim-fugitive'
 
 call vundle#end()
 
@@ -240,27 +234,31 @@ nnoremap <expr> gf (match(getline('.'), '^\s*#\s*include') != -1) ? ':YcmComplet
 "{{{ Airline options
 set laststatus=2
 set noshowmode
-let g:airline_powerline_fonts = 1
+"let g:airline_powerline_fonts = 1
+let g:airline_left_sep = '▶'
+let g:airline_right_sep = '◀'
+
+if !exists('g:airline_symbols')
+    let g:airline_symbols = {}
+endif
+let g:airline_symbols.linenr = '␤'
+let g:airline_symbols.branch = '⎇'
+let g:airline_symbols.whitespace = 'Ξ'
+let g:airline_symbols.paste = 'ρ'
+let g:airline_symbols.spell = 'Ꞩ'
+let g:airline_symbols.notexists = '∄'
+
+let g:airline#extensions#ycm#enabled = 1
+let g:airline#extensions#ycm#error_symbol = '✗'
+let g:airline#extensions#ycm#warning_symbol = '⚠'
+
 let g:airline_exclude_preview = 1
 let g:airline_exclude_filetypes = ['fuf', 'qf']
-"let g:airline#extensions#bufferline#overwrite_variables = 0
-"let g:airline#extensions#tabline#enabled = 1
-
-"{{{ Add fonts to make Airline look pretty
-let s:utils_path = fnamemodify($VIM, ":h") . "/utils"
-if findfile("PowerlineSymbols.otf", $HOME . "/.fonts") == ""
-    echo "Run the following commands to fix ugly symbols in your new statusline plugin:"
-    echo "mkdir ~/.fonts"
-    echo "cp " . s:utils_path . "/fontconfig/PowerlineSymbols.otf ~/.fonts/"
-    echo "fc-cache -f ~/.fonts"
-    echo "cp " . s:utils_path . "/fontconfig/10-powerline-symbols.conf ~/.fontconfig/"
-endif
-"}}}
 
 "}}} Airline options
 
 "{{{UltiSnips
-let g:UltiSnipsSnippetDirectories = [$VIM . '/plugins/custom_snippets', 'UltiSnips']
+let g:UltiSnipsSnippetDirectories = ['~/.vim/custom_snippets', 'UltiSnips']
 let g:UltiSnipsExpandTrigger = "<c-j>"
 "}}}
 
@@ -268,8 +266,6 @@ let g:UltiSnipsExpandTrigger = "<c-j>"
 let g:syntastic_error_symbol = '✗'
 let g:syntastic_warning_symbol = '⚠'
 let g:syntastic_always_populate_loc_list = 1
-"Config file for verilator
-let g:syntastic_verilog_config_file = '.config'
 "}}}
 
 "{{{ NERDTree
@@ -281,16 +277,16 @@ augroup myPlugins
 augroup END
 "}}}
 
-"{{{ Fuzzy Finder
-nnoremap <C-f> :FufFile src/**/<CR>
-" Add include and export dirs to excluded
-let g:fuf_file_exclude = '\v\~$|\.(o|exe|dll|bak|orig|sw[po])$|(^|[/\\])\.(hg|git|bzr)($|[/\\])|/(include|export)/'
+"{{{ CtrlP
+nnoremap <C-f> :CtrlP src/<CR>
+let g:ctrlp_user_command = 'ag %s -l --nocolor -g ""'
+let g:ctrlp_map = ''
 "}}}
 
 "{{{ delimitMate options
 let g:delimitMate_expand_space = 1
 let g:delimitMate_expand_cr = 1
-" Turn off <S-Tab> mapping since it mess up with YCM
+" Turn off <S-Tab> mapping since it messes up with YCM
 let g:delimitMate_tab2exit = 0
 "}}}
 
@@ -305,7 +301,6 @@ colorscheme solarized
 
 set guifont=Inconsolata\ 16
 
-set rtp+=/remote/custom1/algo/davits/tools/p4vim
 " Enable doxygen syntax
 "let g:load_doxygen_syntax = 1
 
@@ -365,8 +360,6 @@ nmap <F2> :call FindInProject(0)<CR>
 nmap <S-F2> :call FindInProject(1)<CR>
 nmap <F3> :call FindInSparse(0)<CR>
 nmap <S-F3> :call FindInSparse(1)<CR>
-nmap <F5> :make shlib-debug -j localhost:8<CR>
-nmap <S-F5> :make install-debug -j localhost:8<CR>
 
 "}}} grep
 
