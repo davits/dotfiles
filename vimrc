@@ -108,7 +108,15 @@ endwhile
 
 " {{{ Functionality to jump between corresponding C++ files
 
-let s:exts = {'h': ['c', 'cc', 'cpp', 'cxx'], 'c': ['h', 'hpp', 'hxx'], 'hpp': ['cpp', 'cxx', 'cc', 'c'], 'cpp': ['hpp', 'hxx', 'h'], 'hxx': ['cxx', 'cpp', 'cc', 'c'], 'cxx': ['hxx', 'hpp', 'h'], 'cc': ['hpp', 'hxx', 'h']}
+let s:exts = {
+             \ 'h': ['c', 'cc', 'cpp', 'cxx'],
+             \ 'c': ['h', 'hpp', 'hxx'],
+             \ 'hpp': ['cpp', 'cxx', 'cc', 'c'],
+             \ 'cpp': ['hpp', 'hxx', 'h'],
+             \ 'hxx': ['cxx', 'cpp', 'cc', 'c'],
+             \ 'cxx': ['hxx', 'hpp', 'h'],
+             \ 'cc': ['hpp', 'hxx', 'h']
+             \}
 
 function s:GoToCorrespondingFile()
     let cfe = expand("%:e")
@@ -197,8 +205,8 @@ set nocompatible
 filetype off
 
 "Set rtp for Vundle
-execute "set rtp+=" . $VIM . "/plugins/bundle/Vundle.vim"
-call vundle#begin($VIM . "/plugins/bundle")
+set rtp+=~/.vim/bundle/Vundle.vim
+call vundle#begin()
 
 Plugin 'gmarik/Vundle.vim'
 
@@ -221,9 +229,8 @@ filetype plugin indent on
 "}}} Vundle options
 
 "{{{ YCM options
-let g:ycm_path_to_python_interpreter = '/depot/Python-2.7.2/bin/python'
 let g:ycm_confirm_extra_conf = 0
-let g:ycm_global_ycm_extra_conf = $VIM . '/ycm_extra_conf.py'
+let g:ycm_global_ycm_extra_conf = '~/.vim/ycm_extra_conf.py'
 let g:ycm_goto_buffer_command = 'new-or-existing-tab'
 nnoremap gD :YcmCompleter GoTo<CR>
 nnoremap gd :YcmCompleter GoToImprecise<CR>
