@@ -118,6 +118,19 @@ let s:exts = {
              \ 'cc': ['hpp', 'hxx', 'h']
              \}
 
+function s:GoToAlreadyOpened(path)
+    for tab in gettabinfo()
+        for winID in tab.windows
+            let winInfo = getwininfo(winID)[0]
+            if a:path == bufname(winInfo.bufnr)
+                call win_gotoid(winID)
+                return 1
+            endif
+        endfor
+    endfor
+    return 0
+endfunction
+
 function s:GoToCorrespondingFile()
     let cfe = expand("%:e")
     if !has_key(s:exts, cfe)
@@ -141,7 +154,9 @@ function s:GoToCorrespondingFile()
         return
     endif
     let cw = expand("<cword>")
-    exec "edit " . found_file
+    if !s:GoToAlreadyOpened(found_file)
+        exec "edit " . found_file
+    endif
     try
         if cw != ""
             call search('\<' . cw . '\>')
@@ -156,6 +171,12 @@ nnoremap gc :call <SID>GoToCorrespondingFile()<CR>
 
 " }}}
 
+"{{{ Clang format
+
+map <C-T> :pyf /opt/llvm/share/clang-format/clang-format.py<cr>
+
+"}}}
+
 "{{{ Plugins and options
 
 "{{{ Memory Usage (may turn off YouCompleteMe)
@@ -167,7 +188,7 @@ function! s:PrintMemoryUsage(message, mem)
 endfunction
 
 function! s:TotalMemoryUsage()
-    let s:mem = system("ps -u $USER -o rss,comm | \\grep 'vim\\\|python'| awk '{sum += $1} END {print sum}'")
+    let s:mem = system("ps -u $USER -o rss,comm | \\grep 'orig_vim\\\|python'| awk '{sum += $1} END {print sum}'")
     " Remove newlines at the end.
     let s:mem = substitute(s:mem, '\n\+$', '', '')
     return s:mem
@@ -200,33 +221,27 @@ endif
 
 "}}}
 
-"{{{ Vundle options
-set nocompatible
-filetype off
+"{{{ vim-plug options
 
-"Set rtp for Vundle
-set rtp+=~/.vim/bundle/Vundle.vim
-call vundle#begin()
+call plug#begin()
 
-Plugin 'gmarik/Vundle.vim'
+Plug 'davits/YouCompleteMe'
+Plug 'davits/DyeVim'
 
-Plugin 'davits/YouCompleteMe'
-Plugin 'davits/DyeVim'
-Plugin 'davits/autohighlight'
-Plugin 'vim-airline/vim-airline'
-Plugin 'vim-airline/vim-airline-themes'
-Plugin 'SirVer/ultisnips'
-Plugin 'honza/vim-snippets'
-Plugin 'scrooloose/nerdtree'
-Plugin 'ctrlpvim/ctrlp.vim'
-Plugin 'Raimondi/delimitMate'
-Plugin 'altercation/vim-colors-solarized'
-Plugin 'tpope/vim-fugitive'
+Plug 'vim-airline/vim-airline'
+Plug 'vim-airline/vim-airline-themes'
+Plug 'SirVer/ultisnips'
+Plug 'honza/vim-snippets'
+Plug 'scrooloose/nerdtree', { 'on': 'NERDTreeToggle' }
+Plug 'ctrlpvim/ctrlp.vim', { 'on': 'CtrlP' }
+Plug 'Raimondi/delimitMate'
+Plug 'altercation/vim-colors-solarized'
+Plug 'davits/autohighlight'
+Plug 'tpope/vim-fugitive'
 
-call vundle#end()
+call plug#end()
 
-filetype plugin indent on
-"}}} Vundle options
+"}}} vim-plug options
 
 "{{{ YCM options
 let g:ycm_confirm_extra_conf = 0
@@ -238,9 +253,14 @@ nnoremap gh :YcmCompleter GetDocQuick<CR>
 nnoremap <expr> gf (match(getline('.'), '^\s*#\s*include') != -1) ? ':YcmCompleter GoToInclude<CR>' : '<c-w>gf'
 "}}} YCM options
 
+"{{{ DyeVim options
+let g:dyevim_timeout=20
+"}}}
+
 "{{{ Airline options
 set laststatus=2
 set noshowmode
+let g:airline#extensions#disable_rtp_load = 1
 "let g:airline_powerline_fonts = 1
 let g:airline_left_sep = '▶'
 let g:airline_right_sep = '◀'
@@ -252,8 +272,9 @@ let g:airline_symbols.linenr = '␤'
 let g:airline_symbols.branch = '⎇'
 let g:airline_symbols.whitespace = 'Ξ'
 let g:airline_symbols.paste = 'ρ'
-let g:airline_symbols.spell = 'Ꞩ'
+let g:airline_symbols.spell = 'S'
 let g:airline_symbols.notexists = '∄'
+let g:airline_symbols.readonly = 'RO'
 
 let g:airline#extensions#ycm#enabled = 1
 let g:airline#extensions#ycm#error_symbol = '✗'
@@ -330,7 +351,7 @@ nnoremap <C-p> "+p
 
 " {{{ Grep in projects
 
-function Find(path, ui, flags)
+function Find(path, ui)
         if a:ui == 0
                 let l:search = "<cword>"
                 if expand(l:search) == ""
@@ -349,17 +370,17 @@ function Find(path, ui, flags)
                 endif
                 let l:search = escape(l:search, ' \"')
         endif
-        execute "grep " . l:search . " " . a:path . " " . a:flags
+        execute "grep " . l:search . " " . a:path
 endfunction
 
 function FindInProject(ui)
         let l:project_path = expand("%:h") . "/*"
-        call Find(l:project_path, a:ui, "-I")
+        call Find(l:project_path, a:ui)
 endfunction
 
 function FindInSparse(ui)
         let l:path = expand("%:h:h") . "/*"
-        call Find(l:path, a:ui, "-rI")
+        call Find(l:path, a:ui)
 endfunction
 
 nmap <F12> :!p4 edit %<CR>
