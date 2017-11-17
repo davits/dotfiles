@@ -109,13 +109,13 @@ endwhile
 " {{{ Functionality to jump between corresponding C++ files
 
 let s:exts = {
-             \ 'h': ['c', 'cc', 'cpp', 'cxx'],
-             \ 'c': ['h', 'hpp', 'hxx'],
+             \ 'h'  : ['c', 'cc', 'cpp', 'cxx'],
+             \ 'c'  : ['h', 'hpp', 'hxx'],
              \ 'hpp': ['cpp', 'cxx', 'cc', 'c'],
              \ 'cpp': ['hpp', 'hxx', 'h'],
              \ 'hxx': ['cxx', 'cpp', 'cc', 'c'],
              \ 'cxx': ['hxx', 'hpp', 'h'],
-             \ 'cc': ['hpp', 'hxx', 'h']
+             \ 'cc' : ['hpp', 'hxx', 'h']
              \}
 
 function s:GoToAlreadyOpened(path)
@@ -188,7 +188,7 @@ function! s:PrintMemoryUsage(message, mem)
 endfunction
 
 function! s:TotalMemoryUsage()
-    let s:mem = system("ps -u $USER -o rss,comm | \\grep 'orig_vim\\\|python'| awk '{sum += $1} END {print sum}'")
+    let s:mem = system("ps -u $USER -o rss,comm | \\grep 'vim\\\|python'| awk '{sum += $1} END {print sum}'")
     " Remove newlines at the end.
     let s:mem = substitute(s:mem, '\n\+$', '', '')
     return s:mem
@@ -223,7 +223,7 @@ endif
 
 "{{{ vim-plug options
 
-call plug#begin()
+call plug#begin('~/.vim/plugged')
 
 Plug 'davits/YouCompleteMe'
 Plug 'davits/DyeVim'
