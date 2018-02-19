@@ -20,6 +20,7 @@ if &t_Co > 2 || has("gui_running")
 endif
 
 set nocompatible         " Use Vim defaults (much better!)
+set encoding=utf-8
 set fileencodings=utf-8  " switch everything to UTF-8
 set bs=indent,eol,start  " allow backspacing over everything in insert mode
 set viminfo='20,\"50     " read/write a .viminfo file, don't store more than 50 lines of registers
@@ -173,7 +174,7 @@ nnoremap gc :call <SID>GoToCorrespondingFile()<CR>
 
 "{{{ Clang format
 
-map <C-T> :pyf /opt/llvm/share/clang-format/clang-format.py<cr>
+map <C-T> :pyf /opt/llvm/share/clang/clang-format.py<cr>
 
 "}}}
 
@@ -228,8 +229,8 @@ call plug#begin('~/.vim/plugged')
 Plug 'davits/YouCompleteMe'
 Plug 'davits/DyeVim'
 
-Plug 'vim-airline/vim-airline'
-Plug 'vim-airline/vim-airline-themes'
+"Plug 'vim-airline/vim-airline'
+"Plug 'vim-airline/vim-airline-themes'
 Plug 'SirVer/ultisnips'
 Plug 'honza/vim-snippets'
 Plug 'scrooloose/nerdtree', { 'on': 'NERDTreeToggle' }
@@ -254,7 +255,7 @@ nnoremap <expr> gf (match(getline('.'), '^\s*#\s*include') != -1) ? ':YcmComplet
 "}}} YCM options
 
 "{{{ DyeVim options
-let g:dyevim_timeout=20
+let g:dyevim_timeout=30
 "}}}
 
 "{{{ Airline options
@@ -286,7 +287,7 @@ let g:airline_exclude_filetypes = ['fuf', 'qf']
 "}}} Airline options
 
 "{{{UltiSnips
-let g:UltiSnipsSnippetDirectories = ['~/.vim/custom_snippets', 'UltiSnips']
+let g:UltiSnipsSnippetDirectories = ['UltiSnips', 'custom_snippets']
 let g:UltiSnipsExpandTrigger = "<c-j>"
 "}}}
 
@@ -326,6 +327,8 @@ let g:delimitMate_tab2exit = 0
 let g:solarized_diffmode="high"    "default value is normal
 set background=dark
 colorscheme solarized
+
+set colorcolumn=80
 
 set guifont=Inconsolata\ 16
 
