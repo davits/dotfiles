@@ -32,6 +32,8 @@ set noerrorbells         " don't beep on errors (seems to be not enought)
 set visualbell           " switch to blink-screen, to disable beep
 set t_vb=                " switch off that blink-screen too :)
 set completeopt-=preview " Turn off preview window on completions
+set fileformats=unix     " We are working only with linux style line endings, will highlight otherwise
+set fileformat=unix      " Set buffer line endings style to linux
 
 " Change default grep command to ignore errors
 set grepprg=ag\ --nogroup\ --nocolor
@@ -63,8 +65,8 @@ augroup system_vimrc
     "Switch back to 8 for cpp files
     autocmd FileType c,cpp set shiftwidth=8 tabstop=8 softtabstop=8
 
-    " Automatically remove trailing spaces and dos-style endlines
-    autocmd BufWritePre,FileWritePre * silent! set ff=unix | silent! %s/\s\+$//
+    " Automatically remove trailing spaces
+    autocmd BufWritePre,FileWritePre * silent! %s/\s\+$//
 
     " When editing a file, always jump to the last cursor position
     autocmd BufReadPost *
@@ -119,7 +121,7 @@ let s:exts = {
              \ 'cc' : ['hpp', 'hxx', 'h']
              \}
 
-function s:GoToAlreadyOpened(path)
+function! s:GoToAlreadyOpened(path)
     for tab in gettabinfo()
         for winID in tab.windows
             let winInfo = getwininfo(winID)[0]
@@ -132,7 +134,7 @@ function s:GoToAlreadyOpened(path)
     return 0
 endfunction
 
-function s:GoToCorrespondingFile()
+function! s:GoToCorrespondingFile()
     let cfe = expand("%:e")
     if !has_key(s:exts, cfe)
         echohl ErrorMsg
@@ -175,6 +177,57 @@ nnoremap gc :call <SID>GoToCorrespondingFile()<CR>
 "{{{ Clang format
 
 map <C-T> :pyf /opt/llvm/share/clang/clang-format.py<cr>
+
+"{{{ Include What You Use
+
+function! s:RunIWYU()
+    let l:current_file = expand('%')
+    if l:current_file == ""
+        echohl ErrorMsg
+        echo "Open some file first."
+        echohl None
+        return
+    endif
+    echo l:current_file
+    let l:compile_db = findfile("compile_commands.json", ".;")
+    if l:compile_db == ""
+        echohl ErrorMsg
+        echo "Can't find compilation database, run :CompileCommands to generate one."
+        echohl None
+        return
+    endif
+    let l:mapping_file = ' -- --verbose=3 --quoted_includes_first --mapping_file=' . $VIM_UTILS . '/share/include-what-you-use/cdesigner.imp'
+    let l:compile_db_path = fnamemodify(l:compile_db, ':h')
+    exec 'terminal iwyu_tool.py -p ' . l:compile_db_path . ' ' . l:current_file . l:mapping_file
+endfunction
+
+command! IncludeWhatYouUse call s:RunIWYU()
+
+"}}}
+
+"{{{ Clang Tidy
+
+function! s:RunTidy()
+    let l:current_file = expand('%')
+    if l:current_file == ""
+        echohl ErrorMsg
+        echo "Open some file first."
+        echohl None
+        return
+    endif
+    echo l:current_file
+    let l:compile_db = findfile("compile_commands.json", ".;")
+    if l:compile_db == ""
+        echohl ErrorMsg
+        echo "Can't find compilation database, run :CompileCommands to generate one."
+        echohl None
+        return
+    endif
+    let l:compile_db_path = fnamemodify(l:compile_db, ':h')
+    exec 'terminal clang-tidy -checks="*,-modernize*" -p ' . l:compile_db_path . ' ' . l:current_file
+endfunction
+
+command! ClangTidy call s:RunTidy()
 
 "}}}
 
@@ -252,6 +305,26 @@ nnoremap gD :YcmCompleter GoTo<CR>
 nnoremap gd :YcmCompleter GoToImprecise<CR>
 nnoremap gh :YcmCompleter GetDocQuick<CR>
 nnoremap <expr> gf (match(getline('.'), '^\s*#\s*include') != -1) ? ':YcmCompleter GoToInclude<CR>' : '<c-w>gf'
+
+function! s:ShowDoc()
+    if !has("gui_running") || !has("overlay")
+        return
+    endif
+    let s:line = line('.')
+    let s:column = col('.')
+    let s:doc = pyeval('ycm_state.GetDoc(' . s:line . ', ' . s:column . ')')
+    if s:doc != ''
+        call overlayshow(s:line, s:column, [ s:doc ])
+    endif
+endfunction
+
+augroup ycm_options
+    autocmd!
+    autocmd CursorMoved * call overlayclose()
+    autocmd InsertEnter * call overlayclose()
+augroup END
+
+nnoremap <silent> K :call <SID>ShowDoc()<CR>
 "}}} YCM options
 
 "{{{ DyeVim options
