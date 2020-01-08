@@ -34,7 +34,8 @@ set t_vb=                " switch off that blink-screen too :)
 set completeopt-=preview " Turn off preview window on completions
 set nowrap               " Do not wrap lines
 set number
-set signcolumn=number
+
+set hidden               " Vim removes text properties on buffer switch, this option never unloads buffers.
 
 " Tabulation and indenting options according to CD coding style
 set expandtab
@@ -295,11 +296,6 @@ command! ClangTidy call s:RunTidy()
 
 call plug#begin('~/.vim/plugged')
 
-"Plug 'davits/YouCompleteMe'
-"Plug 'davits/DyeVim'
-Plug 'natebosch/vim-lsc'
-"Plug 'davits/autohighlight'
-
 Plug 'SirVer/ultisnips'
 Plug 'honza/vim-snippets'
 Plug 'scrooloose/nerdtree', { 'on': 'NERDTreeToggle' }
@@ -312,81 +308,113 @@ Plug 'christoomey/vim-tmux-navigator'
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
 
+Plug 'tikhomirov/vim-glsl'
+Plug 'davits/swift.vim'
+
+" LSP client
+Plug 'prabirshrestha/asyncomplete.vim'
+Plug 'prabirshrestha/async.vim'
+Plug 'davits/vim-lsp'
+Plug 'prabirshrestha/asyncomplete-lsp.vim'
+Plug 'prabirshrestha/asyncomplete-file.vim'
+
+Plug 'sourcegraph/javascript-typescript-langserver', {'do': 'rm -rf node_modules/ && npm install && npm run build'}
+
 call plug#end()
 
 "}}} vim-plug options
 
-"{{{ Vim-lsc options
+"{{{ vim-lsp options
 
-let $PATH='/usr/local/opt/llvm/bin:' . $PATH
+inoremap <expr> <Tab>   pumvisible() ? "\<C-n>" : "\<Tab>"
+inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
+inoremap <expr> <cr>    pumvisible() ? "\<C-y>" : "\<cr>"
+imap <c-space> <Plug>(asyncomplete_force_refresh)
 
-let g:lsc_server_commands = {
-\   'cpp': {
-\        'name': 'cpp_clangd',
-\        'command': ['/usr/local/opt/llvm/bin/clangd',
-\                    '--background-index',
-\                    '--header-insertion=never',
-\                    '--suggest-missing-includes',
-\                    '--log=error',
-\                    '--offset-encoding=utf-8',
-\                    '--query-driver=/usr/local/opt/llvm/bin/*',
-\                   ],
-\   },
-\}
+let g:lsp_diagnostics_echo_cursor = 1
+let g:lsp_highlight_references_enabled = 1
+"let g:lsp_log_file = expand('~/vim-lsp.log')
 
-let g:lsc_auto_map = {
-    \ 'defaults': v:true,
-    \ 'GoToDefinition': 'gd',
-    \}
+au User asyncomplete_setup call asyncomplete#register_source(asyncomplete#sources#file#get_source_options({
+    \ 'name': 'file',
+    \ 'whitelist': ['*'],
+    \ 'priority': 10,
+    \ 'completor': function('asyncomplete#sources#file#completor')
+    \ }))
 
-inoremap <expr> <Tab> pumvisible() ? "\<C-n>" : "<Tab>"
-inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "<S-Tab>"
+au User lsp_setup call lsp#register_server({
+    \ 'name': 'swift-sourcekit',
+    \ 'whitelist': ['swift'],
+    \ 'cmd': {server_info->[expand('~/bin/swift/bin/sourcekit-lsp')]},
+    \ })
 
-"}}}
 
-"{{{ YCM options
-"let g:ycm_confirm_extra_conf = 0
-"let g:ycm_global_ycm_extra_conf = '~/.vim/ycm_extra_conf.py'
-"let g:ycm_goto_buffer_command = 'new-or-existing-tab'
-"
-"let g:ycm_use_clangd = 1 " Use clangd
-"" Let clangd fully control code completion
-"let g:ycm_clangd_uses_ycmd_caching = 0
-"" Use installed clangd, not YCM-bundled clangd which doesn't get updates.
-"let g:ycm_clangd_binary_path = '/usr/local/opt/llvm/bin/clangd'
-"let g:ycm_clangd_args = ['-background-index', '--header-insertion=never', '--suggest-missing-includes']
-"
-"nnoremap gD :YcmCompleter GoTo<CR>
-"nnoremap gd :YcmCompleter GoToImprecise<CR>
-"nnoremap gr :YcmCompleter GoToReferences<CR>
-"nnoremap gh :YcmCompleter GetDocQuick<CR>
-"nnoremap  K :YcmCompleter GetType<CR>
-""nnoremap <expr> gf (match(getline('.'), '^\s*#\s*include') != -1) ? ':YcmCompleter GoToInclude<CR>' : '<c-w>gf'
-"
-"function! s:ShowDoc()
-"    if !has("gui_running") || !has("overlay")
-"        return
-"    endif
-"    let s:line = line('.')
-"    let s:column = col('.')
-"    let s:doc = pyeval('ycm_state.GetDoc(' . s:line . ', ' . s:column . ')')
-"    if s:doc != ''
-"        call overlayshow(s:line, s:column, [ s:doc ])
-"    endif
-"endfunction
-"
-"if has("gui_running") && has("overlay")
-"   augroup ycm_options
-"       autocmd!
-"       autocmd CursorMoved * call overlayclose()
-"       autocmd InsertEnter * call overlayclose()
-"   augroup END
-"endif
+function! s:get_cpp_semantic_highlight_info() abort
+    hi Namespace guifg=#c17100 gui=italic ctermfg=3 term=italic
+    hi UserType guifg=#c17100 ctermfg=3 term=bold
+    hi MemberVariable guifg=#6c71c4 ctermfg=13
+    "hi StaticMemberVariable guifg=#6c71c4 gui=italic ctermfg=13 term=italic
+    "hi GlobalVariable guifg=#93a1a1 gui=italic ctermfg=14 term=italic
+    hi Variable guifg=#93a1a1 ctermfg=14
+    hi MemberFunction guifg=#268bd2 ctermfg=4
+    "hi StaticMemberFunction guifg=#268bd2 gui=italic ctermfg=4 term=italic
+    "hi FunctionParameter guifg=#93a1a1 gui=bold ctermfg=14 term=bold
+    "hi link Enumerator Constant
+    "hi link DyeMacro Macro
+    "hi SkippedRange guifg=#657b83 ctermfg=11
+    return {
+           \'entity.name.function.cpp': 'Function',
+           \'entity.name.function.method.cpp': 'MemberFunction',
+           \'entity.name.namespace.cpp': 'Namespace',
+           \'entity.name.type.class.cpp': 'UserType',
+           \'entity.name.type.enum.cpp': 'UserType',
+           \'entity.name.type.template.cpp': 'UserType',
+           \'variable.other.cpp': 'Variable',
+           \'variable.other.enummember.cpp': 'Constant',
+           \'variable.other.field.cpp': 'MemberVariable',
+           \ }
+endfunction
 
-"}}} YCM options
+au User lsp_setup call lsp#register_server({
+    \ 'name': 'cpp-clangd',
+    \ 'whitelist': ['cpp', 'c'],
+    \ 'cmd': {server_info->['/usr/local/opt/llvm/bin/clangd',
+    \                       '--background-index',
+    \                       '--header-insertion=never',
+    \                       '--suggest-missing-includes',
+    \                       '--query-driver=/usr/local/opt/llvm/bin/*',
+    \                      ]},
+    \ 'semantic_highlight': s:get_cpp_semantic_highlight_info()
+    \ })
 
-"{{{ DyeVim options
-"let g:dyevim_timeout=100
+au User lsp_setup call lsp#register_server({
+    \ 'name': 'python-language-server',
+    \ 'whitelist': ['python'],
+    \ 'cmd': {server_info->[expand('~/Library/Python/3.7/bin/pyls')]},
+    \ })
+
+au User lsp_setup call lsp#register_server({
+    \ 'name': 'javascript',
+    \ 'whitelist': ['javascript', 'typescript'],
+    \ 'cmd': {server_info->['node', expand('~/.vim/plugged/javascript-typescript-langserver/lib/language-server-stdio')]},
+    \ })
+
+
+function! s:on_lsp_buffer_enabled() abort
+    setlocal omnifunc=lsp#complete
+    setlocal signcolumn=number
+    nmap <buffer> gd <plug>(lsp-definition)
+    nmap <buffer> gr <plug>(lsp-references)
+    nmap <buffer> K <plug>(lsp-hover)
+    nmap <buffer> <f2> <plug>(lsp-rename)
+endfunction
+
+augroup lsp_install
+    au!
+    " call s:on_lsp_buffer_enabled only for languages that has the server registered.
+    autocmd User lsp_buffer_enabled call s:on_lsp_buffer_enabled()
+augroup END
+
 "}}}
 
 "{{{ Airline options
@@ -448,6 +476,10 @@ let g:delimitMate_expand_space = 1
 let g:delimitMate_expand_cr = 1
 " Turn off <S-Tab> mapping since it messes up with YCM
 let g:delimitMate_tab2exit = 0
+"}}}
+
+"{{{ glsl
+autocmd! BufNewFile,BufRead *.vs,*.fs,*.fsh set ft=glsl
 "}}}
 
 "}}} Plugins and options
