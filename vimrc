@@ -300,7 +300,7 @@ Plug 'SirVer/ultisnips'
 Plug 'honza/vim-snippets'
 Plug 'scrooloose/nerdtree', { 'on': 'NERDTreeToggle' }
 Plug 'ctrlpvim/ctrlp.vim', { 'on': 'CtrlP' }
-Plug 'Raimondi/delimitMate'
+"Plug 'Raimondi/delimitMate'
 Plug 'altercation/vim-colors-solarized'
 Plug 'tpope/vim-fugitive'
 Plug 'christoomey/vim-tmux-navigator'
@@ -333,6 +333,7 @@ imap <c-space> <Plug>(asyncomplete_force_refresh)
 
 let g:lsp_diagnostics_echo_cursor = 1
 let g:lsp_highlight_references_enabled = 1
+let g:lsp_semantic_enabled = 1
 "let g:lsp_log_file = expand('~/vim-lsp.log')
 
 au User asyncomplete_setup call asyncomplete#register_source(asyncomplete#sources#file#get_source_options({
@@ -382,7 +383,6 @@ au User lsp_setup call lsp#register_server({
     \                       '--background-index',
     \                       '--header-insertion=never',
     \                       '--suggest-missing-includes',
-    \                       '--query-driver=/usr/local/opt/llvm/bin/*',
     \                      ]},
     \ 'semantic_highlight': s:get_cpp_semantic_highlight_info()
     \ })
@@ -390,7 +390,7 @@ au User lsp_setup call lsp#register_server({
 au User lsp_setup call lsp#register_server({
     \ 'name': 'python-language-server',
     \ 'whitelist': ['python'],
-    \ 'cmd': {server_info->[expand('~/Library/Python/3.7/bin/pyls')]},
+    \ 'cmd': {server_info->['pyls']},
     \ })
 
 au User lsp_setup call lsp#register_server({
@@ -491,7 +491,8 @@ let g:solarized_diffmode="high"    "default value is normal
 if has("gui_running")
     set background=dark
     colorscheme solarized
-    set guifont=Inconsolata:h16
+    "set guifont=Inconsolata:h16
+    set guifont=JetBrains\ Mono:h14
 endif
 
 set colorcolumn=120
