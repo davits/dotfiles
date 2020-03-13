@@ -21,5 +21,6 @@ jobs:
           ref: master
 
       - run: git checkout -b R2M-$GITHUB_SHA
-      - run: git merge $R-$GITHUB_SHA
+
+      - run: git merge R-$GITHUB_SHA
       - run: git push origin R2M-$GITHUB_SHA
