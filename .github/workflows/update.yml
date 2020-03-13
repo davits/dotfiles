@@ -1,4 +1,4 @@
-name: Mark stale issues and pull requests
+name: Auto update master from release
 
 on:
   push:
@@ -12,12 +12,14 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch_depth: 0
-        
+
+      - run: git checkout -b R-$GITHUB_SHA
+
       - uses: actions/checkout@v2
         with:
           fetch_depth: 0
           ref: master
 
       - run: git checkout -b R2M-$GITHUB_SHA
-      - run: git merge $GITHUB_REF
+      - run: git merge $R-$GITHUB_SHA
       - run: git push origin R2M-$GITHUB_SHA
