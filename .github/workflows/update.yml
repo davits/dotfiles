@@ -1,0 +1,23 @@
+name: Mark stale issues and pull requests
+
+on:
+  push:
+    branches:
+      - release
+
+jobs:
+  autoupdate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch_depth: 0
+        
+      - uses: actions/checkout@v2
+        with:
+          fetch_depth: 0
+          ref: master
+
+      - run: git checkout -b R2M-$GITHUB_SHA
+      - run: git merge $GITHUB_REF
+      - run: git push origin R2M-$GITHUB_SHA
