@@ -17,5 +17,8 @@ jobs:
       - run: git fetch origin master && git checkout master && git pull origin master
       - run: git checkout -b release2master
 
-      - run: git merge --no-edit -m'Merge branch release into master.' release-tmp
+      - run: git config user.name "Autoupdate"
+      - run: git config user.email "autoupdate@picsart.com"
+      - run: git merge --no-edit -m'Merge from release.' release-tmp
+
       - run: git push -f origin release2master
