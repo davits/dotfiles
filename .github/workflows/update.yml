@@ -11,16 +11,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          fetch_depth: 0
+          fetch-depth: 0
+      - run: git checkout -b release-tmp
 
-      - run: git checkout -b R-$GITHUB_SHA
+      - run: git fetch origin master && git checkout master && git pull origin master
+      - run: git checkout -b release2master
 
-      - uses: actions/checkout@v2
-        with:
-          fetch_depth: 0
-          ref: master
-
-      - run: git checkout -b R2M-$GITHUB_SHA
-
-      - run: git merge R-$GITHUB_SHA
-      - run: git push origin R2M-$GITHUB_SHA
+      - run: git merge --no-edit -m'Merge branch release into master.' release-tmp
+      - run: git push -f origin release2master
