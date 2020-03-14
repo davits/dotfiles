@@ -28,3 +28,20 @@ jobs:
         run: |
           git merge --no-edit -m'Merge from release.' release-tmp
           git push -f origin release2master
+
+      - name: Open PR if needed
+        uses: helaili/github-graphql-action@1.0
+        with:
+          query: '
+            query { 
+              repository(owner:"davits", name:"dotfiles") {
+                pullRequests(headRefName:"release2master", first:1, states:OPEN) {
+                  nodes {
+                    id
+                  }
+                }
+              }
+            }'
+          log: 1
+
+      - run: cat github-graphql-action.json
