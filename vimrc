@@ -558,4 +558,4 @@ set guioptions-=R
 
 "}}}
 
-" negative test
+" positive test
