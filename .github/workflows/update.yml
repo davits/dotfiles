@@ -39,9 +39,10 @@ jobs:
       - run: echo "::set-env name=RESULT::`cat github-graphql-action.json`"
       - run: echo $RESULT
 
-      - run: echo $REPO_ID
-        env:
-          REPO_ID: ${{ env.RESULT.data.repository.repoID }}
+      - env:
+          REPO_ID: ${{ toJson(env.RESULT).data.repository.repoID }}
+          PR_ID: ${{ toJson(env.RESULT).data.repository.pullRequests.nodes.prID }}
+        run: echo $REPO_ID $PR_ID
 
       - run: export PR=`cat github-graphql-action.json | grep -q '"prID"' && echo 1 || echo 0`
       - run: echo $PR
