@@ -450,12 +450,6 @@ let g:UltiSnipsSnippetDirectories = ['UltiSnips', 'custom_snippets']
 let g:UltiSnipsExpandTrigger = "<c-j>"
 "}}}
 
-"{{{ Syntastic options
-"let g:syntastic_error_symbol = '✗'
-"let g:syntastic_warning_symbol = '⚠'
-"let g:syntastic_always_populate_loc_list = 1
-"}}}
-
 "{{{ NERDTree
 map <F6> :NERDTreeToggle<CR>
 augroup myPlugins
@@ -563,3 +557,5 @@ set guioptions-=R
 "set guioptions-=M
 
 "}}}
+
+" positive test
