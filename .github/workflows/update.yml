@@ -45,17 +45,17 @@ jobs:
           echo "::set-env name=PR_ID::$PR_ID"
 
       - name: Open PR
+        if: env.PR_ID == 'null'
         uses: helaili/github-graphql-action@1.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           args: ${{ format('--query .github/graphql/create_pr.yml --repoID {0} --headRef release2master --baseRef master', env.REPO_ID) }}
 
+      - name: Add labels
+        if: env.PR_ID == 'null'
         uses: actions/github@v1.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           args: label ci_run_checks automerge
-
-        if: env.PR_ID == 'null'
-
