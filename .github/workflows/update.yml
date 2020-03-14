@@ -43,9 +43,7 @@ jobs:
           echo "::set-env name=REPO_ID::$REPO_ID"
           echo "::set-env name=PR_ID::$PR_ID"
 
-      - run: echo $REPO_ID $PR_ID
-
-      - if: env.PR == 'null'
+      - if: env.PR_ID == 'null'
         uses: helaili/github-graphql-action@1.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
