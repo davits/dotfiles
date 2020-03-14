@@ -58,4 +58,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          args: label ci_run_checks automerge
+          args: label ci_run_checks
