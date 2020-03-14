@@ -1,23 +1,24 @@
 query: '
-  mutation($owner:String!, $name:String!, $headRef:String!, $baseRef:String!) {
-    repository(owner:$owner, name:$name) {
-      pullRequests(headRefName:$headRef, states:OPEN, first:1) {
-        nodes {
-          id
-        }
-      }
+mutation($repoID:String!, $headRef:String!, $baseRef:String!) {
+  createPullRequest(input: {
+    repositoryId: $repoID,
+    baseRefName: $baseRef,
+    headRefName: $headRef,
+    title: "Automerge release to master",
+    body: "Automatically merge changes from release to master."
+  }) {
+    pullRequest {
+      id
     }
-  }'
+  }
+}'
 
 log: 1
 
 variables:
-  owner:
+  repoID:
     type: arg
-    name: owner
-  name:
-    type: arg
-    name: name
+    name: repoID
   headRef:
     type: arg
     name: headRef

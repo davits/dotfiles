@@ -36,20 +36,18 @@ jobs:
         with:
           args: --query .github/graphql/get_pr.yml --owner davits --name dotfiles --headRef release2master
 
-      - run: echo "::set-env name=RESULT::`cat github-graphql-action.json`"
-      - run: echo $RESULT
+      - run: |
+          RESULT=`cat github-graphql-action.json`
+          REPO_ID=`echo $RESULT | jq '.data.repository.repoID'`
+          PR_ID=`echo $RESULT | jq '.data.repository.pullRequests.nodes | .[0] | .prID'`
+          echo "::set-env name=REPO_ID::$REPO_ID"
+          echo "::set-env name=PR_ID::$PR_ID"
 
-      - env:
-          REPO_ID: ${{ toJson(env.RESULT).data.repository.repoID }}
-          PR_ID: ${{ toJson(env.RESULT).data.repository.pullRequests.nodes.prID }}
-        run: echo $REPO_ID $PR_ID
+      - run: echo $REPO_ID $PR_ID
 
-      - run: export PR=`cat github-graphql-action.json | grep -q '"prID"' && echo 1 || echo 0`
-      - run: echo $PR
-
-      - if: env.PR == '0'
+      - if: env.PR == 'null'
         uses: helaili/github-graphql-action@1.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          args: --query .github/graphql/create_pr.yml --owner davits --name dotfiles --headRef release2master --baseRef master
+          args: --query .github/graphql/create_pr.yml --repoID $REPO_ID --headRef release2master --baseRef master

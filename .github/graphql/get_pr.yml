@@ -1,14 +1,14 @@
 query: '
-  query($owner:String!, $name:String!, $headRef:String!) {
-    repository(owner:$owner, name:$name) {
-      repoID: id
-      pullRequests(headRefName:$headRef, states:OPEN, first:1) {
-        nodes {
-          prID: id
-        }
+query($owner:String!, $name:String!, $headRef:String!) {
+  repository(owner:$owner, name:$name) {
+    repoID: id
+    pullRequests(headRefName:$headRef, states:OPEN, first:1) {
+      nodes {
+        prID: id
       }
     }
-  }'
+  }
+}'
 
 log: 1
 
