@@ -557,3 +557,5 @@ set guioptions-=R
 "set guioptions-=M
 
 "}}}
+
+" negative test
