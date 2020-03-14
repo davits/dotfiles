@@ -1,4 +1,4 @@
-name: Auto update master from release
+name: Auto merge release to master
 
 on:
   push:
@@ -12,13 +12,50 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - run: git checkout -b release-tmp
 
-      - run: git fetch origin master && git checkout master && git pull origin master
-      - run: git checkout -b release2master
+      - name: Prepare branches
+        run: |
+          git checkout -b release-tmp
+          git fetch origin master && git checkout master && git pull origin master
+          git checkout -b release2master
 
-      - run: git config user.name "Autoupdate"
-      - run: git config user.email "autoupdate@picsart.com"
-      - run: git merge --no-edit -m'Merge from release.' release-tmp
+      - name: git config
+        run: |
+          git config user.name "Autoupdate"
+          git config user.email "autoupdate@picsart.com"
 
-      - run: git push -f origin release2master
+      - name: Merge & Push
+        run: |
+          git merge --no-edit -m'Merge from release.' release-tmp
+          git push -f origin release2master
+
+      - name: Check opened PRs
+        uses: helaili/github-graphql-action@1.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: --query .github/graphql/get_pr.yml --owner davits --name dotfiles --headRef release2master
+
+      - name: Set environment variables
+        run: |
+          RESULT=`cat github-graphql-action.json`
+          REPO_ID=`echo $RESULT | jq '.data.repository.repoID'`
+          PR_ID=`echo $RESULT | jq '.data.repository.pullRequests.nodes | .[0] | .prID'`
+          echo "::set-env name=REPO_ID::$REPO_ID"
+          echo "::set-env name=PR_ID::$PR_ID"
+
+      - name: Open PR
+        if: env.PR_ID == 'null'
+        uses: helaili/github-graphql-action@1.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: ${{ format('--query .github/graphql/create_pr.yml --repoID {0} --headRef release2master --baseRef master', env.REPO_ID) }}
+
+      - name: Add labels
+        if: env.PR_ID == 'null'
+        uses: actions/github@v1.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: label ci_run_checks automerge
