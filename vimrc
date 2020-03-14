@@ -558,4 +558,4 @@ set guioptions-=R
 
 "}}}
 
-" test PR open
+" opened PR test
