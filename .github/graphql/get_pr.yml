@@ -1,9 +1,10 @@
 query: '
   query($owner:String!, $name:String!, $headRef:String!) {
     repository(owner:$owner, name:$name) {
+      repoID: id
       pullRequests(headRefName:$headRef, states:OPEN, first:1) {
         nodes {
-          id
+          prID: id
         }
       }
     }

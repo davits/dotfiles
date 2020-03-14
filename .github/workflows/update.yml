@@ -1,4 +1,4 @@
-name: Auto update master from release
+name: Auto merge release to master
 
 on:
   push:
@@ -34,6 +34,17 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          args: --query .github/graphql/pull_request.yml --owner davits --name dotfiles --headRef release2master
+          args: --query .github/graphql/get_pr.yml --owner davits --name dotfiles --headRef release2master
 
-      - run: cat github-graphql-action.json
+        run: export RESULT=`cat github-graphql-action.json`
+      - echo: ${{ env.RESULT.data.repository.repoID }}
+
+        run: export PR=`cat github-graphql-action.json | grep -q '"id"' && echo 1 || echo 0`
+        run: echo $PR
+
+        if: env.PR == '0'
+        uses: helaili/github-graphql-action@1.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: --query .github/graphql/create_pr.yml --owner davits --name dotfiles --headRef release2master --baseRef master
