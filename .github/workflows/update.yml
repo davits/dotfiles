@@ -31,17 +31,9 @@ jobs:
 
       - name: Open PR if needed
         uses: helaili/github-graphql-action@1.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          query: '
-            query { 
-              repository(owner:"davits", name:"dotfiles") {
-                pullRequests(headRefName:"release2master", first:1, states:OPEN) {
-                  nodes {
-                    id
-                  }
-                }
-              }
-            }'
-          log: 1
+          args: --query .github/graphql/pull_request.yml --owner davits --name dotfiles --headRef release2master
 
       - run: cat github-graphql-action.json

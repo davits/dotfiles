@@ -1,0 +1,23 @@
+query: '
+  query($owner:String!, $name:String!, $headRef:String!) {
+    repository(owner:$owner, name:$name) {
+      pullRequests(headRefName:$headRef, states:OPEN, first:1) {
+        nodes {
+          id
+        }
+      }
+    }
+  }'
+
+log: 1
+
+variables:
+  owner:
+    type: arg
+    name: owner
+  name:
+    type: arg
+    name: name
+  headRef:
+    type: arg
+    name: headRef
