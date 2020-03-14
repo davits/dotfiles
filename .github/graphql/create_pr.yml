@@ -1,0 +1,27 @@
+query: '
+mutation($repoID:String!, $headRef:String!, $baseRef:String!) {
+  createPullRequest(input: {
+    repositoryId: $repoID,
+    baseRefName: $baseRef,
+    headRefName: $headRef,
+    title: "Automerge release to master",
+    body: "Automatically merge changes from release to master."
+  }) {
+    pullRequest {
+      id
+    }
+  }
+}'
+
+log: 1
+
+variables:
+  repoID:
+    type: arg
+    name: repoID
+  headRef:
+    type: arg
+    name: headRef
+  baseRef:
+    type: arg
+    name: baseRef
