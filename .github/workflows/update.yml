@@ -1,0 +1,24 @@
+name: Automatically update master branch from production.
+on:
+  push:
+    branches:
+      - production
+jobs:
+  release2master:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: master
+      - name: Reset promotion branch
+        run: |
+          git fetch origin production:production
+          git reset --hard production
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: release2master
+          title: Update master from release
+          body: Automatically opened PR to merge latest changes from release into master
+          labels: ci_run_checks, automerge
