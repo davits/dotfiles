@@ -19,3 +19,6 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: release2master
+          title: Update master from release
+          body: Automatically opened PR to merge latest changes from release into master
+          labels: ci_run_checks, automerge
